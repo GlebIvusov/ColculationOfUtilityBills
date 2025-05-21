@@ -3,10 +3,63 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ColculationOfUtilityBills"
+        xmlns:local="clr-namespace:ColculationOfUtilityBills" 
+        xmlns:viewmodels="clr-namespace:ColculationOfUtilityBills.ViewModels"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition/>
+            <RowDefinition Height="100"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="Заполните поля показаниями счетчиков:" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding Input}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" BorderThickness="1" BorderBrush="Black">
+                            <TextBlock FontSize="18" Text="{Binding NameService}" 
+                                    Margin="5 5 5 5"/>
+                        </Border>
+                        <Border Grid.Column="1" BorderThickness="1" BorderBrush="Black">
+                            <TextBox FontSize="18" BorderThickness="0"  Text="{Binding Value, 
+                                 UpdateSourceTrigger=PropertyChanged}" Margin="5 5 5 5" IsEnabled="{Binding IsEnabled}"/>
+                        </Border>
 
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid Grid.Row="2">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Margin="10 0 0 0" Orientation="Horizontal">
+                <TextBlock Text="Период:"  FontSize="20" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                <ComboBox Width="150" VerticalAlignment="Center" 
+                           ItemsSource="{Binding Months}" 
+                          DisplayMemberPath="Name" SelectedValuePath="Value" FontSize="20" SelectedItem="{Binding SelectedMonth, Mode=TwoWay}"/>
+            </StackPanel>
+            <Button Width="200" Height="50"
+                VerticalAlignment="Center"  
+                Grid.Column="1" Command="{Binding ButtonEnterClick}">
+                <TextBlock Text="Ввод" FontSize="18"/>
+            </Button>
+            
+            <Button  Height="50" Margin="0 0 10 0"
+                    VerticalAlignment="Center"  
+                    Grid.Column="2" Command="{Binding ButtonNotMeteringDeviceClick}">
+                <TextBlock Text="У меня нет счетчиков" FontSize="20"/>
+            </Button>
+        </Grid>
     </Grid>
 </Window>

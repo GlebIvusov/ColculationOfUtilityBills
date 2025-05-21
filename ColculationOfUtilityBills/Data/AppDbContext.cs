@@ -26,9 +26,9 @@ namespace ColculationOfUtilityBills.Data
                 .HasForeignKey(s => s.IdService);
 
             modelBuilder.Entity<ServicesList>()
-                .HasOne(r => r.Service)
+                .HasOne(r => r.PersonPeriod)
                 .WithMany(t => t.ServicesLists)
-                .HasForeignKey(s => s.IdService);
+                .HasForeignKey(s => s.IdPersonPeriod);
         }
     }
 }

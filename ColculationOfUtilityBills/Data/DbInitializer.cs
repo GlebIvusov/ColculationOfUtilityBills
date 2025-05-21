@@ -14,6 +14,7 @@ namespace ColculationOfUtilityBills.Data
         public static void Seed()
         {
             using var db = new AppDbContext();
+            db.Database.EnsureDeleted();
             db.Database.EnsureCreated();
             if (db.Services.Any()) return;
             string filePath = "Res/dataServices.txt";

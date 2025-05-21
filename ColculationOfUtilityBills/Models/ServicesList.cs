@@ -11,6 +11,8 @@ namespace ColculationOfUtilityBills.Models
         public int Id { get; set; }
         public int IdService { get; set; }
         public int IdPersonPeriod { get; set; }
+        public int LastMeterReading { get; set; }
+        public decimal Cost { get; set; }
 
         public Service Service { get; set; } = null!;
         public PersonPeriod PersonPeriod { get; set; } = null!;
