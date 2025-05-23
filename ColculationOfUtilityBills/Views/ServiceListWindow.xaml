@@ -4,9 +4,54 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ColculationOfUtilityBills.Views"
+        xmlns:viewmodels="clr-namespace:ColculationOfUtilityBills.ViewModels"
         mc:Ignorable="d"
-        Title="ServiceListWindow" Height="450" Width="800">
+        Title="ServiceListWindow" Height="520" Width="800">
     <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition/>
+            <RowDefinition Height="100"/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Text="Ваш счет к оплате:" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
         
+        <ItemsControl Grid.Row="1" ItemsSource="{Binding ServicesListW}">
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Margin="5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" BorderThickness="1" BorderBrush="Black">
+                            <TextBlock FontSize="18" Text="{Binding NameService}" 
+                                Margin="5 5 5 5"/>
+                        </Border>
+                        <Border Grid.Column="1" BorderThickness="1" BorderBrush="Black">
+                            <TextBlock FontSize="18" Text="{Binding Cost, StringFormat={}{0:N2} ₽}" Margin="5 5 5 5"/>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <Grid Grid.Row="2">
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Button  Height="50" Margin="10"
+            VerticalAlignment="Center"  
+            Grid.Column="0" Command="{Binding ButtonBack}">
+                <TextBlock Text="Изменить данные" FontSize="18"/>
+            </Button>
+
+            <Button  Height="50" Margin="10"
+                VerticalAlignment="Center"  
+                Grid.Column="1" Command="{Binding ButtonSave}">
+                <TextBlock Text="Сохранить" FontSize="20"/>
+            </Button>
+        </Grid>
     </Grid>
 </Window>

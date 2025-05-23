@@ -2,6 +2,7 @@
 using ColculationOfUtilityBills.Models;
 using ColculationOfUtilityBills.Views;
 using GalaSoft.MvvmLight.Command;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -12,19 +13,99 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 
 namespace ColculationOfUtilityBills.ViewModels
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        public ObservableCollection<UserInputData> Input { get; set; } = [];
+        public bool HasMeteringDevice = true;
+        public bool SavePersonPeriod = false;
+        public PersonPeriod PersonPeriodData { get; set; }
+        private ObservableCollection<UserInputData> _input;
+        public ObservableCollection<UserInputData> Input
+        {
+            get => _input;
+            set
+            {
+                _input = value;
+                OnPropertyChanged();
+            }
+        }
+        private ObservableCollection<PersonPeriod> _personPeriods;
+        public ObservableCollection<PersonPeriod> PersonPeriods
+        {
+            get => _personPeriods;
+            set
+            {
+                _personPeriods = value;
+                OnPropertyChanged();
+            }
+        }
+        private DateTime? _dateStartPicker;
+        public DateTime? DateStartPicker
+        {
+            get => _dateStartPicker;
+            set
+            {
+                if (_dateStartPicker != value)
+                {
+                    _dateStartPicker = value;
+                    OnPropertyChanged(nameof(DateStartPicker));
+                }
+            }
+        }
+
+        private DateTime? _dateEndPicker;
+        public DateTime? DateEndPicker
+        {
+            get => _dateEndPicker;
+            set
+            {
+                if (_dateEndPicker != value)
+                {
+                    _dateEndPicker = value;
+                    OnPropertyChanged(nameof(DateEndPicker));
+                }
+            }
+        }
+        
+        public int PersonsCount { get; set; }
+        private ObservableCollection<ServiceListCosts>? _servicesListW;
+        public ObservableCollection<ServiceListCosts>? ServicesListW
+        {
+            get => _servicesListW;
+            set
+            {
+                _servicesListW = value;
+                OnPropertyChanged(nameof(ServicesListW));
+            }
+        }
+        public List<ServicesList> serviceLists = new List<ServicesList>();
+       
         public DateTime DateStart { get; set; }
         public DateTime DateEnd { get; set; }
         public decimal TotalCost { get; set; }
         public ObservableCollection<Month> Months { get; set; }
         public ICommand ButtonEnterClick { get; set; }
         public ICommand ButtonNotMeteringDeviceClick { get; set; }
+        public ICommand ButtonSave {  get; set; }
+        public ICommand ButtonBack { get; set; }
+        public ICommand ButtonHistoryClick { get; set; }
+        public ICommand ButtonHistoryBack { get; set; }
+        public ICommand ButtonMainWindow {  get; set; }
+        public bool DateEnabled { get; set; } = false;
+        public DateTime DisplayDateStart { get; set; }
+        public DateTime DisplayDateEnd { get; set; } 
+        public Action? RequestHideHistoryCostWindow { get; set; }
+        public Action? RequestShowHistoryCostWindow { get; set; }
+        public Action? RequestHideMainWindow { get; set; }
+        public Action? RequestHideServiceListWindow { get; set; }
+        public Action? RequestShowMainWindow { get; set; }
+        public Action? RequestShowServiceListWindow { get; set; }
+        public Action? RequestShowPersonPeriodWindow { get; set; }
+        public Action? RequestHidePersonPeriodWindow { get; set; }
 
         private Month? _selectedMonth;
         public Month SelectedMonth
@@ -35,15 +116,26 @@ namespace ColculationOfUtilityBills.ViewModels
                 if (_selectedMonth != value)
                 {
                     _selectedMonth = value;
-                    OnPropertyChanged();
+                    
                     int MonthValue = _selectedMonth?.Value ?? 0;
+                    DisplayDateStart = new DateTime(DateTime.Now.Year, MonthValue, 1);
+                    DisplayDateEnd = new DateTime(DateTime.Now.Year, MonthValue, DateTime.DaysInMonth(DateTime.Now.Year, MonthValue));
+                    DateStartPicker = DisplayDateStart;
+                    DateEndPicker = DisplayDateEnd;
+                    DateEnabled = true;
+                    OnPropertyChanged();
+                    OnPropertyChanged(nameof(DateEnabled));
+                    OnPropertyChanged(nameof(DisplayDateStart));
+                    OnPropertyChanged(nameof(DisplayDateEnd));
+                    OnPropertyChanged(nameof(DateStartPicker));
+                    OnPropertyChanged(nameof(DateEndPicker));
                 }
             }
         }
         public List<Month> GetDate()
         {
             var months = new List<Month>();
-            for (int monthNum = 1; monthNum <= 12; monthNum++)
+            for (int monthNum = 1; monthNum <= DateTime.Now.Month-1; monthNum++)
             {
                 string monthName = new DateTime(2000, monthNum, 1).ToString("MMMM", new CultureInfo("ru-RU"));
                 var month = new Month
@@ -58,71 +150,269 @@ namespace ColculationOfUtilityBills.ViewModels
 
         public void EnterButton()
         {
+            TotalCost = 0;
             using var db = new AppDbContext();
-            if (SelectedMonth == null)
+            if (HasMeteringDevice == false)
             {
-                MessageBox.Show("Выберете период!");
-                return;
+                if(DateStartPicker > DateEndPicker || DateEndPicker is null || DateStartPicker is null)
+                {
+                    MessageBox.Show("Некорректный период ! ! !");
+                    return;
+                }
+                if(PersonsCount <= 0)
+                {
+                    MessageBox.Show("Количество людей должно быть больше 0 ! ! !");
+                    return;
+                }
+                DateStart = (DateTime)DateStartPicker;
+                DateEnd = (DateTime)DateEndPicker;
+                var days = DateEnd - DateStart;
+                var lastDay = DateTime.DaysInMonth(DateEnd.Year, DateEnd.Month);
+                TotalCost = 0m;
+                serviceLists = new List<ServicesList>();
+                decimal HotWaterStandart = 0m;
+                foreach (var item in Input)
+                {
+                    
+                    var service = db.Services.First(s => s.Id == item.IdService);
+                    var cost = service.Standart * PersonsCount * service.Rate;
+                    
+                    if (item.IdService == 5)
+                        HotWaterStandart = service.Standart;
+                    if (item.IdService == 6)
+                        cost = service.Standart * HotWaterStandart*PersonsCount * service.Rate;
+                    if (lastDay - (days.Days + 1) > 0)
+                    {
+                        cost = cost / lastDay*(days.Days + 1);
+                    }
+                    var serviceList = new ServicesList
+                    {
+                        IdService = item.IdService,
+                        Cost = cost,
+                        LastMeterReading = 0,
+                        Service = service,
+                    };
+                    TotalCost += serviceList.Cost;
+                    serviceLists.Add(serviceList);
+
+                }
+                
             }
-
-            DateStart = new DateTime(DateTime.Now.Year, SelectedMonth.Value, 1);
-            int lastDay = DateTime.DaysInMonth(DateTime.Now.Year, SelectedMonth.Value);
-            DateEnd = new DateTime(DateTime.Now.Year, SelectedMonth.Value,lastDay);
-
-            TotalCost = 0m;    
-            var serviceLists = new List<ServicesList>();
-            foreach (var item in Input)
+            else
             {
-                if (item.Value < 0)
+                if (SelectedMonth == null)
                 {
-                    MessageBox.Show($"Некорректное значение поля {item.NameService} ! ! !");
+                    MessageBox.Show("Выберете период!");
                     return;
                 }
-                var lMReading = db.ServicesLists.Where(s => s.IdService == item.IdService)
-                    .OrderByDescending(s => s.Id)
-                    .Select(s => s.LastMeterReading)
-                    .FirstOrDefault();
-                if (lMReading != 0 && lMReading > item.Value)
+                decimal HotWaterStandart = 0m;
+                DateStart = new DateTime(DateTime.Now.Year, SelectedMonth.Value, 1);
+                int lastDay = DateTime.DaysInMonth(DateTime.Now.Year, SelectedMonth.Value);
+                DateEnd = new DateTime(DateTime.Now.Year, SelectedMonth.Value, lastDay);
+
+                TotalCost = 0m;
+                serviceLists = new List<ServicesList>();
+                foreach (var item in Input)
                 {
-                    MessageBox.Show($"некорректные данные в поле {item.NameService}, проверьте прошлые показатели ! ! !");
-                    return;
+                    if (item.Value < 0)
+                    {
+                        MessageBox.Show($"Некорректное значение поля {item.NameService} ! ! !");
+                        return;
+                    }
+                    var lMReading = db.ServicesLists.Where(s => s.IdService == item.IdService)
+                        .OrderByDescending(s => s.Id)
+                        .Select(s => s.LastMeterReading)
+                        .FirstOrDefault();
+                    if (lMReading != 0 && lMReading > item.Value)
+                    {
+                        MessageBox.Show($"некорректные данные в поле {item.NameService}, сверьте прошлые показатели ! ! !");
+                        return;
+                    }
+                    var service = db.Services.First(s => s.Id == item.IdService);
+                    var cost = SetMeterReadingCost(db, item.IdService, item.Value);
+                    var HotWaterValue = 0m;
+                    if (item.IdService == 5)
+                    {
+                        HotWaterStandart = service.Standart;
+                        HotWaterValue = item.Value;
+                    }
+                        
+                    if (item.IdService == 6)
+                        cost = service.Standart * HotWaterStandart *HotWaterValue* service.Rate;
+                    var serviceList = new ServicesList
+                    {
+                        IdService = item.IdService,
+                        Cost = cost,
+                        LastMeterReading = item.Value,
+                        Service = service
+                    };
+                    TotalCost += serviceList.Cost;
+                    serviceLists.Add(serviceList);
+
                 }
-                var serviceList = new ServicesList
+            }
+            if (!SavePersonPeriod)
+            {
+                var personPeriod = new PersonPeriod
                 {
-                    IdService = item.IdService,
-                    Cost = SetMeterReadingCost(db, item.IdService, item.Value),
-                    LastMeterReading = item.Value
+                    StartDate = DateStart,
+                    EndDate = DateEnd,
+                    TotalCost = TotalCost
                 };
-                TotalCost += serviceList.Cost;
-                serviceLists.Add(serviceList);
+                var lastDay = DateTime.DaysInMonth(DateEnd.Year, DateEnd.Month);
+                PersonPeriodData = personPeriod;
+                db.PersonPeriods.Add(PersonPeriodData);
+                db.SaveChanges();
+                
+                SavePersonPeriod = true;
             }
-            var personPeriod = new PersonPeriod
-            {
-                StartDate = DateStart,
-                EndDate = DateEnd,
-                TotalCost = TotalCost
-            };
-            db.PersonPeriods.Add(personPeriod);
+            var period = db.PersonPeriods.First(s => s.Id == PersonPeriodData.Id);
+            period.TotalCost = TotalCost;
             db.SaveChanges();
-            MessageBox.Show(db.PersonPeriods.Select(s => s.Id).Where(s=>s== personPeriod.Id).FirstOrDefault().ToString());
+
             foreach (var serviceList in serviceLists)
             {
-                
-                serviceList.IdPersonPeriod = personPeriod.Id;
+                serviceList.IdPersonPeriod = PersonPeriodData.Id;
             }
-            db.ServicesLists.AddRange(serviceLists);
-            db.SaveChanges();
+            ServicesListW = new ObservableCollection<ServiceListCosts>(serviceLists.Select(s => new ServiceListCosts
+            {
+                NameService = s.Service.Name,
+                Cost = s.Cost
+            }));
+            var ServiceListTotalCost = new ServiceListCosts()
+            {
+                NameService = "Итого",
+                Cost = TotalCost
+            };
+            ServicesListW.Add(ServiceListTotalCost);
+            RequestHideMainWindow?.Invoke();
+            RequestShowServiceListWindow?.Invoke();
         }
 
+        public void Save()
+        {
+            using var db = new AppDbContext();
+            var serviceListsSave = new List<ServicesList>();
+            foreach (var sl in serviceLists)
+            {
+                var serviceList = new ServicesList
+                {
+                    IdService = sl.IdService,
+                    Cost = sl.Cost,
+                    LastMeterReading = sl.LastMeterReading,
+                    IdPersonPeriod = sl.IdPersonPeriod
+                };
+                serviceListsSave.Add(serviceList);
+            }
+            db.ServicesLists.AddRange(serviceListsSave);
+            db.SaveChanges();
+            DateStartPicker = DateEndPicker;
+            MessageBox.Show("Данные сохранены ! ! !");
+            InputUpdate();
+            SavePersonPeriod = false;
+            if (HasMeteringDevice)
+            {
+                RequestShowMainWindow?.Invoke();
+                RequestHideServiceListWindow?.Invoke();
+            }
+            else
+            {
+                RequestShowPersonPeriodWindow?.Invoke();
+                RequestHideServiceListWindow?.Invoke();
+            }
+
+        }
+        public void ButtonBackServiceListMindow()
+        {
+            if(HasMeteringDevice)
+            {
+                RequestShowMainWindow?.Invoke();
+                RequestHideServiceListWindow?.Invoke();
+            }
+            else
+            {
+                RequestShowPersonPeriodWindow?.Invoke();
+                RequestHideServiceListWindow?.Invoke();
+            }
+
+        }
+
+        public void InputUpdate()
+        {
+            using var db = new AppDbContext();
+            if (HasMeteringDevice)
+            {
+                Input = new ObservableCollection<UserInputData>(
+               db.Services.Select(s => new UserInputData
+               {
+                   IdService = s.Id,
+                   NameService = s.Name
+
+               }).Where(s => s.IdService != 2).ToList());
+            }
+            else
+            {
+                Input = new ObservableCollection<UserInputData>(
+               db.Services.Select(s => new UserInputData
+               {
+                   IdService = s.Id,
+                   NameService = s.Name
+
+               }).Where(s => s.IdService != 3 && s.IdService !=4).ToList());
+            }
+            
+        }
         public void ButtonPersonPeriod()
         {
-            var mainViewModel = new MainViewModel();
-            PersonPeriodWindow personPeriodW = new PersonPeriodWindow()
+            
+            HasMeteringDevice = false;
+            InputUpdate();
+            RequestShowPersonPeriodWindow?.Invoke();
+            RequestHideMainWindow?.Invoke();
+        }
+        public void ButtonMainWindowShow()
+        {
+            HasMeteringDevice = true;
+            InputUpdate();
+            RequestShowMainWindow?.Invoke();
+            RequestHidePersonPeriodWindow?.Invoke();
+        }
+        public void ButServHystoryCost()
+        {
+            using var db = new AppDbContext();
+            PersonPeriods = new ObservableCollection<PersonPeriod>
+           (
+               db.PersonPeriods.Select(p => new PersonPeriod
+               {
+                   Id = p.Id,
+                   StartDate = p.StartDate,
+                   EndDate = p.EndDate,
+                   TotalCost = p.TotalCost,
+                   ServicesLists = p.ServicesLists.Select(s=> new ServicesList
+                   {
+                       Id = s.Id,
+                       Cost = s.Cost,
+                       IdPersonPeriod = s.IdPersonPeriod,
+                       Service = s.Service,
+                       PersonPeriod = s.PersonPeriod
+                   }).ToList()
+               }).ToList());
+            RequestShowHistoryCostWindow?.Invoke();
+            RequestHideMainWindow?.Invoke();
+
+        }
+        public void HistoryBack()
+        {
+            if (HasMeteringDevice)
             {
-                DataContext = mainViewModel,
-            };
-            personPeriodW.Show();
-            Application.Current.MainWindow.Hide();
+                RequestShowMainWindow?.Invoke();
+                RequestHideHistoryCostWindow?.Invoke();
+            }
+            else
+            {
+                RequestShowPersonPeriodWindow?.Invoke();
+                RequestHideHistoryCostWindow?.Invoke();
+            }
         }
         public static Service SetService(AppDbContext db, int id)
         {
@@ -130,6 +420,7 @@ namespace ColculationOfUtilityBills.ViewModels
             return service is null ?
                 throw new InvalidOperationException("Одна или несколько услуг не найдены в базе данных.") : service;
         }
+
 
         public static decimal SetMeterReadingCost(AppDbContext db,int id, int currentReading)
         {
@@ -151,19 +442,19 @@ namespace ColculationOfUtilityBills.ViewModels
 
             return cost * rate;
         }
-        public MainViewModel() 
+        public MainViewModel()
         {
+            ButtonHistoryBack = new RelayCommand(HistoryBack);
+            ButtonSave = new RelayCommand(Save);
+            ButtonBack = new RelayCommand(ButtonBackServiceListMindow);
             ButtonEnterClick = new RelayCommand(EnterButton);
-            using var db = new AppDbContext();
+            ButtonHistoryClick = new RelayCommand(ButServHystoryCost);
+            ButtonMainWindow = new RelayCommand(ButtonMainWindowShow);
             DbInitializer.Seed();
             Months = new ObservableCollection<Month>(GetDate());
-            Input = new ObservableCollection<UserInputData>(
-                db.Services.Select(s => new UserInputData
-                {
-                    IdService = s.Id,
-                    NameService = s.Name
-                    
-                }).ToList());
+            InputUpdate();
+           
+
             ButtonNotMeteringDeviceClick = new RelayCommand(ButtonPersonPeriod);
         }
         

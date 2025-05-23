@@ -6,11 +6,10 @@ using System.Threading.Tasks;
 
 namespace ColculationOfUtilityBills.Models
 {
-    public class UserInputData
+    public class ServiceListCosts
     {
-        public int IdService { get; set; }
-        public string NameService { get; set; } = "";
-        public int Value { get; set; }
+        public string NameService { get; set; } 
+        public decimal Cost { get; set; }
 
     }
 }

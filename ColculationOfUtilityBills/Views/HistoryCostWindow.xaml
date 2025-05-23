@@ -1,0 +1,56 @@
+﻿<Window x:Class="ColculationOfUtilityBills.Views.HistoryCostWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ColculationOfUtilityBills.Views"
+        mc:Ignorable="d"
+        Title="HistoryCostWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height ="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <ScrollViewer Grid.Row="0">
+            <ItemsControl  ItemsSource="{Binding PersonPeriods}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Expander Margin="5">
+                            <Expander.Header>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Id}" Margin="5"/>
+                                    <TextBlock Text="{Binding StartDate, StringFormat='От {0:d}'}" Margin="5"/>
+                                    <TextBlock Text="{Binding EndDate, StringFormat='До {0:d}'}" Margin="5"/>
+                                    <TextBlock Text="{Binding TotalCost, StringFormat='Итого: {0:N2} ₽'}" Margin="5"/>
+                                </StackPanel>
+                            </Expander.Header>
+                            <StackPanel>
+                                <TextBlock Text="Услуги:" FontWeight="Bold" Margin="10,5,0,5"/>
+                                <ItemsControl ItemsSource="{Binding ServicesLists}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border BorderBrush="LightGray" BorderThickness="0 0 0 1" Padding="5">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition/>
+                                                        <ColumnDefinition/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Service.Name}" Margin="10,2"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Cost, StringFormat={}{0:N2} ₽}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Expander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        
+        <Button Grid.Row="1" Margin="10 10 10 10" Command="{Binding ButtonHistoryBack}">
+            <TextBlock Text="Назад" FontSize="20"/>
+        </Button>
+    </Grid>
+</Window>

@@ -6,14 +6,24 @@
         xmlns:local="clr-namespace:ColculationOfUtilityBills" 
         xmlns:viewmodels="clr-namespace:ColculationOfUtilityBills.ViewModels"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="470" Width="800">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="50"/>
             <RowDefinition/>
             <RowDefinition Height="100"/>
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="Заполните поля показаниями счетчиков:" FontSize="20" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0"  VerticalAlignment="Center" Width="200" Margin="10 0 10 0" Command="{Binding ButtonHistoryClick}">
+                <TextBlock Text="История платежей" FontSize="20"/>
+            </Button>
+            <TextBlock Grid.Column="1"  Text="Заполните поля показаниями счетчиков:" FontSize="20" VerticalAlignment="Center"/>
+        </Grid>
+        
         <ItemsControl Grid.Row="1" ItemsSource="{Binding Input}">
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
@@ -28,7 +38,7 @@
                         </Border>
                         <Border Grid.Column="1" BorderThickness="1" BorderBrush="Black">
                             <TextBox FontSize="18" BorderThickness="0"  Text="{Binding Value, 
-                                 UpdateSourceTrigger=PropertyChanged}" Margin="5 5 5 5" IsEnabled="{Binding IsEnabled}"/>
+                                 UpdateSourceTrigger=PropertyChanged}" Margin="5 5 5 5" PreviewTextInput="NumericTextBox_PreviewTextInput"/>
                         </Border>
 
                     </Grid>
@@ -48,6 +58,7 @@
                 <ComboBox Width="150" VerticalAlignment="Center" 
                            ItemsSource="{Binding Months}" 
                           DisplayMemberPath="Name" SelectedValuePath="Value" FontSize="20" SelectedItem="{Binding SelectedMonth, Mode=TwoWay}"/>
+                
             </StackPanel>
             <Button Width="200" Height="50"
                 VerticalAlignment="Center"  

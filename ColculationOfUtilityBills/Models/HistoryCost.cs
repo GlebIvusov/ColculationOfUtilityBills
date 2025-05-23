@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ColculationOfUtilityBills.ViewModels
+namespace ColculationOfUtilityBills.Models
 {
-    class PersonPeriodViewModel
+    internal class HistoryCost
     {
     }
 }

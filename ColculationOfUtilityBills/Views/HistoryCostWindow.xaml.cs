@@ -1,5 +1,4 @@
-﻿using ColculationOfUtilityBills.ViewModels;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -16,14 +15,13 @@ using System.Windows.Shapes;
 namespace ColculationOfUtilityBills.Views
 {
     /// <summary>
-    /// Логика взаимодействия для ServiceListWindow.xaml
+    /// Логика взаимодействия для HistoryCostWindow.xaml
     /// </summary>
-    public partial class ServiceListWindow : Window
+    public partial class HistoryCostWindow : Window
     {
-        public ServiceListWindow()
+        public HistoryCostWindow()
         {
             InitializeComponent();
-
         }
     }
 }

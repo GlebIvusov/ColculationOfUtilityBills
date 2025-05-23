@@ -5,8 +5,62 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ColculationOfUtilityBills.Views"
         mc:Ignorable="d"
-        Title="PersonPeriodWindow" Height="450" Width="800">
+        xmlns:viewmodels="clr-namespace:ColculationOfUtilityBills.ViewModels"
+        Title="PersonPeriodWindow" Height="300" Width="800">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition Height="120"/>
+        </Grid.RowDefinitions>
+       
+            <Button Grid.Row="0"  HorizontalAlignment="Left" Width="200" Margin="10" Command="{Binding ButtonHistoryClick}">
+                <TextBlock Text="История платежей" FontSize="20"/>
+            </Button>
+        <TextBlock Grid.Row="1"  Text="Введите количетво людей, проживающих в квартире в расчетный период:" FontSize="20" VerticalAlignment="Center"/>
+
+        <TextBox Grid.Row="2" BorderBrush="Black" BorderThickness="1" Text="{Binding PersonsCount}" Margin="10" PreviewTextInput="NumericTextBox_PreviewTextInput"/>
+
+        <Grid Grid.Row="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Orientation="Horizontal">
+                    <TextBlock  Text="Период:"  FontSize="20" Margin="0 0 10 0" VerticalAlignment="Center"/>
+                    <ComboBox Width="150" VerticalAlignment="Center" 
+                           ItemsSource="{Binding Months}" 
+                          DisplayMemberPath="Name" SelectedValuePath="Value" Margin="10" FontSize="20"  SelectedItem="{Binding SelectedMonth, Mode=TwoWay}"/>
+                </StackPanel>
+                <StackPanel Grid.Row="1" Orientation="Horizontal">
+                    <TextBlock Text="Дата начала:" Margin="10 0 10 0"/>
+                    <DatePicker IsEnabled="{Binding DateEnabled}" Margin="10 0 0 5" SelectedDate="{Binding DateStartPicker, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayDateStart="{Binding DisplayDateStart}" DisplayDateEnd="{Binding DisplayDateEnd}"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Grid.Row="2">
+                    <TextBlock Text="Дата конца:" Margin="10 0 16 0"/>
+                    <DatePicker IsEnabled="{Binding DateEnabled}" Margin="10 0 0 5" SelectedDate="{Binding DateEndPicker, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" DisplayDateStart="{Binding DisplayDateStart}" DisplayDateEnd="{Binding DisplayDateEnd}"/>
+                </StackPanel>
+            </Grid>
+
+            <Button Width="200" Height="50"
+            VerticalAlignment="Center"  Margin="10"
+            Grid.Column="1" Command="{Binding ButtonEnterClick}">
+                <TextBlock Text="Ввод" FontSize="18"/>
+            </Button>
+
+            <Button  Height="50" Width="220" Margin="10"
+                VerticalAlignment="Center"  
+                Grid.Column="2" Command="{Binding ButtonMainWindow}">
+                <TextBlock Text="У меня есть счетчики" FontSize="20"/>
+            </Button>
+        </Grid>
     </Grid>
 </Window>
